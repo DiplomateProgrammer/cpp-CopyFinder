@@ -31,6 +31,7 @@ public:
     void handleSizeGroup(const QFileInfoList sizeGroup);
     std::atomic_bool working;
     std::atomic_bool deleted;
+    QFuture<void> future1, future2;
 
 private:
     Ui::MainWindow *ui;

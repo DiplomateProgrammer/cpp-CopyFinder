@@ -44,7 +44,7 @@ void MainWindow::onStartButtonClicked()
     QVariant data = fileSystemModel->filePath(selected);
     QDir targetDirectory = QDir((QString)data.value<QString>());
     std::unordered_map<qint64, QFileInfoList> *sizeGroups = new std::unordered_map<qint64, QFileInfoList>();
-    QtConcurrent::run(this, &MainWindow::findDuplicates, targetDirectory, sizeGroups);
+    future1 = QtConcurrent::run(this, &MainWindow::findDuplicates, targetDirectory, sizeGroups);
 }
 
 void MainWindow::findDuplicates(QDir folder, std::unordered_map<qint64, QFileInfoList> *sizeGroups)
@@ -68,7 +68,8 @@ void MainWindow::findDuplicates(QDir folder, std::unordered_map<qint64, QFileInf
     }
     delete sizeGroups;
     emit finishedClustering();
-    QtConcurrent::blockingMap(sizeGroupsList, [this](QFileInfoList sizeGroup) { handleSizeGroup(sizeGroup); });
+    future2 = QtConcurrent::map(sizeGroupsList, [this](QFileInfoList sizeGroup) { handleSizeGroup(sizeGroup); });
+    future2.waitForFinished();
     emit finishedCalculations();
 }
 
@@ -170,5 +171,7 @@ MainWindow::~MainWindow()
 {
     deleted = true;
     working = false;
+    future1.waitForFinished();
+    future2.waitForFinished();
     delete ui;
 }
